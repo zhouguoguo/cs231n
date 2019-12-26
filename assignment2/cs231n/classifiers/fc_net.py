@@ -119,9 +119,9 @@ class TwoLayerNet(object):
         dx, dw1, db1 = affine_relu_backward(drelu, cache)
         
         grads['W1'] = dw1 + self.reg*self.params['W1']
-        grads['b1'] = db1
+        grads['b1'] = db1.squeeze()
         grads['W2'] = dw2 + self.reg*self.params['W2']
-        grads['b2'] = db2
+        grads['b2'] = db2.squeeze()
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################

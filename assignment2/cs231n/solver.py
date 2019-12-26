@@ -181,7 +181,8 @@ class Solver(object):
         # Compute loss and gradient
         loss, grads = self.model.loss(X_batch, y_batch)
         self.loss_history.append(loss)
-
+        
+        
         # Perform a parameter update
         for p, w in self.model.params.items():
             dw = grads[p]
@@ -258,9 +259,10 @@ class Solver(object):
         """
         Run optimization to train the model.
         """
-        num_train = self.X_train.shape[0]
-        iterations_per_epoch = max(num_train // self.batch_size, 1)
-        num_iterations = self.num_epochs * iterations_per_epoch
+        num_train = self.X_train.shape[0]  #49000
+        
+        iterations_per_epoch = max(num_train // self.batch_size, 1)  #490
+        num_iterations = self.num_epochs * iterations_per_epoch   #4900
 
         for t in range(num_iterations):
             self._step()
