@@ -191,8 +191,21 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        for i in range(self.num_layers):
+            if i == 0:
+                self.params[f'W{i+1}'] = weight_scale * np.random.randn(input_dim, hidden_dims[0])
+                self.params[f'b{i+1}'] = np.zeros(hidden_dims[0])
+                
+            elif i == self.num_layers-1:
+                self.params[f'W{i+1}'] = weight_scale * np.random.randn(hidden_dims[i-1], num_classes)
+                self.params[f'b{i+1}'] = np.zeros(num_classes)
+            else:
+                self.params[f'W{i+1}'] = weight_scale * np.random.randn(hidden_dims[i-1], hidden_dims[i])
+                self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
+        
+        #for k, v in self.params.items():
+            #print(k, v.shape)
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -255,8 +268,23 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        caches = []
+        relu_outs = []
+        
+        for i in range(self.num_layers):
+            if i == 0: # first layer: input_dim=>hidden_dims[0]
+                relu_out, cache = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+                caches.append(cache)
+                relu_outs.append(relu_out)
+            elif i == self.num_layers-1: # last layer: hidden_dims[i-1] => num_classes
+                out, cache = affine_forward(relu_outs[i-1], self.params[f'W{i+1}'], self.params[f'b{i+1}'])
+            else:
+                relu_out, cache = affine_relu_forward(relu_outs[i-1], self.params[f'W{i+1}'], self.params[f'b{i+1}'])
+                caches.append(cache)
+                relu_outs.append(relu_out)
+        
+        scores = out
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -282,8 +310,34 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dout = softmax_loss(scores, y)
+        sum = 0.0
+        for i in range(self.num_layers):
+            sum += np.sum(self.params[f'W{i+1}']**2)
+        loss += 0.5 * self.reg * sum
 
+        drelu = None
+        for i in range(self.num_layers)[::-1]:
+            if i == self.num_layers-1: ## last layer: affine
+                drelu, dw, db = affine_backward(dout, cache)
+                grads[f'W{i+1}'] = dw + self.reg*self.params[f'W{i+1}']
+                grads[f'b{i+1}'] = db.squeeze()
+            else:
+                dx, dw, db = affine_relu_backward(drelu, caches[i])
+                grads[f'W{i+1}'] = dw + self.reg*self.params[f'W{i+1}']
+                grads[f'b{i+1}'] = db.squeeze()
+                drelu = dx
+        
+#        drelu, dw2, db2 = affine_backward(dout, fc2_cache)
+#        dx, dw1, db1 = affine_relu_backward(drelu, cache)
+        
+ #       grads['W1'] = dw1 + self.reg*self.params['W1']
+ #       grads['b1'] = db1.squeeze()
+ #       grads['W2'] = dw2 + self.reg*self.params['W2']
+  #      grads['b2'] = db2.squeeze()
+        
+        
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
