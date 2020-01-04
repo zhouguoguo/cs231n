@@ -392,8 +392,33 @@ def layernorm_forward(x, gamma, beta, ln_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    
+    x = x.T
+    
+    mu = np.mean(x, axis = 0)
+    
+    xmu = x - mu
+    sq = xmu ** 2
+    var = np.var(x, axis=0)
+    sqrtvar = np.sqrt(var + eps)
+        
+    sample_var = sqrtvar
+    
+    ivar = 1./sqrtvar
+    xhat = xmu * ivar
+    
+    xhat = xhat.T
+        
+    gammax = gamma * xhat
+    out = gammax + beta
+    cache = (xhat,gamma,xmu,ivar,sqrtvar,var,eps)
+    
+    
+    #sample_mean = np.mean(x, axis = 1)  #(N,)
+    #sample_var = x.std(axis=1)   #(N,)
+    #out = (x-sample_mean[:,None])*gamma / sample_var[:,None] + beta
+    #cache = (x, gamma, beta, sample_mean, sample_var)
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -427,7 +452,25 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    xhat,gamma,xmu,ivar,sqrtvar,var,eps = cache
+    
+    dxhat = dout * gamma
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(dout * xhat, axis=0)
+    
+    # Transpose dxhat and xhat back
+    dxhat = dxhat.T
+    xhat = xhat.T
+    
+    # Actually xhat's shape is (D, N), we use notation (N, D) to let us copy
+    # batch normalization backward code when computing dx without change anything
+    N, D = xhat.shape
+
+    # Copy from batch normalization backward code
+    dx = 1.0/N * ivar * (N*dxhat - np.sum(dxhat, axis=0) - xhat*np.sum(dxhat*xhat, axis=0))
+
+    # Transpose dx back
+    dx = dx.T
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
